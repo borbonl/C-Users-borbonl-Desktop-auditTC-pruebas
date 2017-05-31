@@ -1,0 +1,68 @@
+       Identification Division.
+       Program-Id. "dcscat".
+
+       Data Division.
+       Working-Storage Section.
+
+       copy "sqlenv.cbl".
+       copy "sqlca.cbl".
+
+      * Local Variables
+       77 rc                  pic s9(9) comp-5.
+
+       77 errloc              pic x(80).
+      * Variables for the DCS DIRECTORY SCAN APIs
+       77 dbcount             pic s9(4) comp-5.
+       77 cbl-count           pic s9(4) comp-5 value 1.
+       77 idx                 pic s9(4) comp-5.
+
+       Procedure Division.
+       dcscat-pgm section.
+
+           display "Sample COBOL Program : DCSCAT.CBL".
+
+           move "this is a dcs database" to COMMENT of SQL-DIR-ENTRY.
+           move "dcsnm"                  to LDB     of SQL-DIR-ENTRY.
+           move "targetnm"               to TDB     of SQL-DIR-ENTRY.
+           move "arName"                 to AR      of SQL-DIR-ENTRY.
+           move SQL-DCS-STR-ID           to
+                STRUCT-ID of SQL-DIR-ENTRY.
+           move " "                      to PARM    of SQL-DIR-ENTRY.
+
+           display "cataloging the DCS database : ",
+                TDB of SQL-DIR-ENTRY.
+      ***********************************
+      * CATALOG DCS DATABASE API called *
+      ***********************************
+           call "sqlggdad" using
+                                 by reference sqlca
+                                 by reference SQL-DIR-ENTRY
+                           returning rc.
+
+           move "cataloging the database" to errloc.
+           call "checkerr" using SQLCA errloc.
+
+           display "database ", TDB of SQL-DIR-ENTRY,
+                " has been catalogued".
+
+           display "now listing all databases".
+           perform list-dcs thru end-list-dcs.
+
+           display "now uncataloging the database that was created ",
+                    TDB of SQL-DIR-ENTRY.
+
+      *************************************
+      * UNCATALOG DCS DATABASE API called *
+      *************************************
+           call "sqlggdel" using
+                                 by reference sqlca
+                                 by reference SQL-DIR-ENTRY
+                           returning rc.
+
+           move "uncataloging the database" to errloc.
+           call "checkerr" using SQLCA errloc.
+
+           display "now listing all databases [after uncatalog DCS]".
+           perform list-dcs thru end-list-dcs.
+
+       end-dcscat. stop run.
